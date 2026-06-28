@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UGX PNL'S - Job Form</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <!-- Bootstrap CSS -->
+    <link
+      href="static/vendor/bootstrap/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="static/vendor/bootstrap-icons/bootstrap-icons.css">
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="static/css/styles.css" />
+    <style>
+      .table td input {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Modern Header -->
+    <header class="modern-header">
+      <div class="header-container">
+        <div class="logo-section">
+          <div class="logo-icon">U</div>
+          <a href="index.html" class="logo-text">
+            UGX PNL'S
+            <span>Calculator</span>
+          </a>
+        </div>
+        <nav class="nav-section">
+          <a href="index.html" class="nav-btn">
+            <i class="bi bi-arrow-left"></i>
+            <span>Back to Jobs</span>
+          </a>
+          <a href="admin.html" class="nav-btn" id="navAdminLink" style="display:none;">
+            <i class="bi bi-people"></i>
+            <span>Users</span>
+          </a>
+          <span class="nav-btn ghost" id="navJobTitle">New Job</span>
+          <button class="nav-btn" id="navLogout" onclick="if(window.Auth)Auth.authLogout()">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+    <main class="main-container">
+      <div class="modern-card job-form-card">
+        <div class="card-body">
+          <div class="job-form-intro">
+            <div>
+              <h2 id="formHeading" class="page-title">Create Job</h2>
+              <p class="page-subtitle">Build the internal P&L, schedule the work, and prepare the customer-facing estimate from one place.</p>
+            </div>
+          </div>
+          <form id="jobForm" onsubmit="return false;">
+        <!-- Company and job details -->
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="companyName" class="form-label">Company Name<span class="text-danger">*</span></label>
+            <input type="text" id="companyName" class="form-control" required />
+          </div>
+          <div class="col-md-6">
+            <label for="jobName" class="form-label">Job Name<span class="text-danger">*</span></label>
+            <input type="text" id="jobName" class="form-control" required />
+          </div>
+          <div class="col-md-6">
+            <label for="jobType" class="form-label">Job Type</label>
+            <select id="jobType" class="form-select">
+              <option value="Custom Home">Custom Home</option>
+              <option value="Asphalt">Asphalt</option>
+              <option value="Concrete">Concrete</option>
+              <option value="Dirt Moving">Dirt Moving / Excavation</option>
+              <option value="Pressure Washing">Pressure Washing</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Project Duration<span class="text-danger">*</span></label>
+            <div class="row g-2">
+              <div class="col-6">
+                <label for="startDate" class="form-label text-muted small">Start Date</label>
+                <input type="date" id="startDate" class="form-control" required />
+              </div>
+              <div class="col-6">
+                <label for="endDate" class="form-label text-muted small">End Date</label>
+                <input type="date" id="endDate" class="form-control" required />
+              </div>
+            </div>
+            <div class="mt-2">
+              <small class="text-muted">Duration: <span id="projectDuration">-</span></small>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="profitMargin" class="form-label">Profit Margin (<span id="profitMarginValue">10</span>%)</label>
+            <div class="d-flex align-items-center gap-2">
+              <input
+                type="range"
+                id="profitMargin"
+                class="form-range flex-grow-1"
+                value="10"
+                step="1"
+                min="0"
+                max="500"
+              />
+              <input
+                type="number"
+                id="profitMarginNumber"
+                class="form-control"
+                style="width: 80px;"
+                value="10"
+                step="1"
+                min="0"
+                max="500"
+              />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="logoInput" class="form-label">Company Logo</label>
+            <input type="file" id="logoInput" class="form-control" accept="image/*" />
+          </div>
+          <div class="col-md-6 d-flex align-items-end">
+            <img
+              id="logoPreview"
+              src=""
+              alt="Logo preview"
+              style="max-height: 80px; display: none; border: 1px solid #ccc; padding: 4px;"
+            />
+          </div>
+        </div>
+
+        <!-- Project Phases / Yearly Breakdown -->
+        <div id="yearlyBreakdownSection" style="display: none;" class="my-3">
+          <h4 class="section-title">Yearly Breakdown</h4>
+          <p class="text-muted mb-3">Allocate percentages of work across project years:</p>
+          <div id="yearlyBreakdownContainer" class="mb-3">
+            <!-- Yearly breakdown will be dynamically added here -->
+          </div>
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Percentages must add up to 100%. This breakdown will be used for yearly Excel sheets.
+          </div>
+        </div>
+
+        <!-- Notes -->
+	        <div class="my-3 notes-panel">
+	          <label for="notes" class="form-label">Notes</label>
+	          <textarea id="notes" class="form-control" rows="3"></textarea>
+	        </div>
+
+	        <!-- Measurements / LiDAR Import -->
+	        <section class="measurement-panel tool-panel my-4" aria-labelledby="measurementTitle">
+		          <div class="measurement-head">
+		            <div>
+		              <h4 class="section-title mb-1" id="measurementTitle">Measurements / LiDAR Import</h4>
+		              <div class="measurement-kicker">Scan, measure, or CSV takeoff data</div>
+		            </div>
+		            <input
+		              type="file"
+		              id="measurementFileInput"
+		              class="visually-hidden"
+		              accept=".json,.csv,application/json,text/csv"
+		              onchange="handleMeasurementFileInput(this)"
+		            />
+		            <div class="measurement-actions">
+		              <button type="button" class="btn btn-outline-primary btn-sm" onclick="importMeasurementFile()">
+		                <i class="bi bi-cloud-upload me-1"></i>Import JSON/CSV
+		              </button>
+		              <button type="button" class="btn btn-outline-secondary btn-sm" onclick="downloadMeasurementTemplate()">
+		                <i class="bi bi-filetype-csv me-1"></i>Template CSV
+		              </button>
+		              <button type="button" class="btn btn-outline-secondary btn-sm" onclick="applyMeasurementsToCalculator()">
+		                <i class="bi bi-rulers me-1"></i>Apply to Calculator
+		              </button>
+		              <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearMeasurements()">
+		                <i class="bi bi-trash me-1"></i>Clear
+		              </button>
+		            </div>
+		          </div>
+		          <div id="measurementImportStatus" class="measurement-import-status" aria-live="polite">
+		            Ready for JSON or CSV.
+		          </div>
+		          <div id="measurementSummary" class="measurement-summary">
+		            <div class="measurement-empty">No measurements imported.</div>
+		          </div>
+		        </section>
+
+	        <!-- Client Estimate Builder -->
+	        <section class="client-estimate-panel tool-panel my-4" aria-labelledby="clientEstimateTitle">
+          <div class="client-estimate-head">
+            <div>
+              <h4 class="section-title mb-1" id="clientEstimateTitle">Client Estimate</h4>
+              <div class="client-estimate-kicker">Customer-facing quote</div>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="populateClientScopeFromJob()">
+              <i class="bi bi-magic me-1"></i>Build Scope From Job
+            </button>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label for="clientName" class="form-label">Bill To</label>
+              <input type="text" id="clientName" class="form-control" data-client-estimate-field />
+            </div>
+            <div class="col-md-4">
+              <label for="clientEmail" class="form-label">Client Email</label>
+              <input type="email" id="clientEmail" class="form-control" data-client-estimate-field />
+            </div>
+            <div class="col-md-4">
+              <label for="clientPhone" class="form-label">Client Phone</label>
+              <input type="tel" id="clientPhone" class="form-control" data-client-estimate-field />
+            </div>
+            <div class="col-md-6">
+              <label for="clientProjectAddress" class="form-label">Project Address</label>
+              <input type="text" id="clientProjectAddress" class="form-control" data-client-estimate-field />
+            </div>
+            <div class="col-md-3">
+              <label for="estimateNumber" class="form-label">Estimate #</label>
+              <input type="text" id="estimateNumber" class="form-control" data-client-estimate-field />
+            </div>
+            <div class="col-md-3">
+              <label for="estimateTitle" class="form-label">Estimate Title</label>
+              <input type="text" id="estimateTitle" class="form-control" value="Project Estimate" data-client-estimate-field />
+            </div>
+            <div class="col-md-3">
+              <label for="estimateDate" class="form-label">Estimate Date</label>
+              <input type="date" id="estimateDate" class="form-control" data-client-estimate-field />
+            </div>
+            <div class="col-md-3">
+              <label for="estimateValidUntil" class="form-label">Valid Until</label>
+              <input type="date" id="estimateValidUntil" class="form-control" data-client-estimate-field />
+            </div>
+            <div class="col-md-3">
+              <label for="clientPriceOverride" class="form-label">Client Total Override ($)</label>
+              <input type="number" id="clientPriceOverride" class="form-control" min="0" step="0.01" data-client-estimate-field />
+            </div>
+            <div class="col-md-3">
+              <label for="clientDepositPercent" class="form-label">Deposit (%)</label>
+              <input type="number" id="clientDepositPercent" class="form-control" min="0" max="100" step="1" value="0" data-client-estimate-field />
+            </div>
+            <div class="col-12">
+              <label for="clientScope" class="form-label">Scope of Work</label>
+              <textarea id="clientScope" class="form-control" rows="5" data-client-estimate-field></textarea>
+            </div>
+            <div class="col-12">
+              <div class="client-itemization-head">
+                <label class="form-label mb-0" for="clientItemsBody">Client Itemization</label>
+                <div class="client-itemization-actions">
+                  <button type="button" class="btn btn-outline-primary btn-sm" onclick="buildClientItemizationFromJob()">
+                    <i class="bi bi-list-check me-1"></i>Build From Job
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addClientEstimateItem()">
+                    <i class="bi bi-plus-lg me-1"></i>Add Line
+                  </button>
+                </div>
+              </div>
+              <div class="client-itemization-wrap">
+                <table class="client-itemization-table" aria-label="Client itemization">
+                  <thead>
+                    <tr>
+                      <th>Item shown to client</th>
+                      <th class="client-item-amount-col">Client Price ($)</th>
+                      <th class="client-item-action-col"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="clientItemsBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="clientExclusions" class="form-label">Exclusions / Clarifications</label>
+              <textarea id="clientExclusions" class="form-control" rows="3" data-client-estimate-field></textarea>
+            </div>
+            <div class="col-md-6">
+              <label for="clientTerms" class="form-label">Payment Terms</label>
+              <textarea id="clientTerms" class="form-control" rows="3" data-client-estimate-field></textarea>
+            </div>
+          </div>
+
+          <div class="client-estimate-footer">
+            <div class="client-estimate-options">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="clientShowTaxLine" checked data-client-estimate-field />
+                <label class="form-check-label" for="clientShowTaxLine">Show sales tax line</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="clientShowLogo" checked data-client-estimate-field />
+                <label class="form-check-label" for="clientShowLogo">Show logo</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="clientShowSignature" checked data-client-estimate-field />
+                <label class="form-check-label" for="clientShowSignature">Show signature line</label>
+              </div>
+            </div>
+            <div class="client-estimate-preview" aria-live="polite">
+              <span>Client Total</span>
+              <strong>$<span id="clientEstimateTotalPreview">0.00</span></strong>
+              <small id="clientDepositPreview">Deposit: $0.00</small>
+            </div>
+          </div>
+        </section>
+
+        <!-- Materials section -->
+        <!-- Job Templates Section -->
+        <div id="templateSection" class="tool-panel template-workbench mb-4">
+          <h4 class="section-title">Quick Start Templates</h4>
+          <p class="text-muted mb-3">Select a template to pre-fill the form with common job configurations:</p>
+          <div class="row g-3">
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('residential_renovation')">
+                <i class="bi bi-house-door template-icon"></i>
+                <div class="template-name">Kitchen/Bath Reno</div>
+                <div class="template-description">Residential renovation</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('commercial_buildout')">
+                <i class="bi bi-building template-icon"></i>
+                <div class="template-name">Commercial Build-out</div>
+                <div class="template-description">Office/retail space</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('asphalt_paving')">
+                <i class="bi bi-cone-striped template-icon"></i>
+                <div class="template-name">Asphalt Paving</div>
+                <div class="template-description">Parking lot/road</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('asphalt_patch_crack_repair')">
+                <i class="bi bi-tools template-icon"></i>
+                <div class="template-name">Patch & Crack Repair</div>
+                <div class="template-description">Asphalt removals/fill</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('concrete_work')">
+                <i class="bi bi-bricks template-icon"></i>
+                <div class="template-name">Concrete Work</div>
+                <div class="template-description">Driveway/foundation</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('new_home_construction')">
+                <i class="bi bi-hammer template-icon"></i>
+                <div class="template-name">New Home</div>
+                <div class="template-description">2,500 sq ft home</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('roofing')">
+                <i class="bi bi-triangle template-icon"></i>
+                <div class="template-name">Roofing</div>
+                <div class="template-description">Roof replacement</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('plumbing_remodel')">
+                <i class="bi bi-droplet template-icon"></i>
+                <div class="template-name">Plumbing</div>
+                <div class="template-description">Bathroom plumbing</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('electrical_upgrade')">
+                <i class="bi bi-lightning template-icon"></i>
+                <div class="template-name">Electrical</div>
+                <div class="template-description">Panel upgrade</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('pressure_washing_residential')">
+                <i class="bi bi-droplet-half template-icon"></i>
+                <div class="template-name">Pressure Wash</div>
+                <div class="template-description">Residential cleaning</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('pressure_washing_commercial')">
+                <i class="bi bi-building template-icon"></i>
+                <div class="template-name">Commercial Wash</div>
+                <div class="template-description">Building & lot</div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-3">
+              <div class="template-card" onclick="applyTemplate('pressure_washing_stucco')">
+                <i class="bi bi-house template-icon"></i>
+                <div class="template-name">Stucco Soft Wash</div>
+                <div class="template-description">Delicate cleaning</div>
+              </div>
+            </div>
+          </div>
+          <hr class="my-4">
+        </div>
+
+        <!-- My (custom) Templates -->
+        <div id="customTemplateSection" class="tool-panel template-workbench mb-4">
+          <h4 class="section-title">My Templates</h4>
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <span class="text-muted">Your saved presets — click one to load it into this job.</span>
+            <button type="button" class="btn btn-sm btn-primary" onclick="saveCurrentAsTemplate()">
+              <i class="bi bi-bookmark-plus me-1"></i>Save as Template
+            </button>
+          </div>
+          <div id="customTemplatesContainer" class="row g-3"></div>
+          <hr class="my-4">
+        </div>
+
+        <h4 class="section-title">Materials</h4>
+        <div class="table-responsive">
+          <table class="table table-bordered" id="materialsTable">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 35%">Description</th>
+                <th style="width: 15%">Quantity</th>
+                <th style="width: 20%">Unit Cost ($)</th>
+                <th style="width: 20%">Total ($)</th>
+                <th style="width: 10%">Action</th>
+              </tr>
+            </thead>
+            <tbody id="materialsBody"></tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-secondary mb-3" onclick="addMaterial()">
+          <i class="bi bi-plus-circle me-1"></i>Add Material
+        </button>
+        <button type="button" class="btn btn-outline-secondary mb-3 ms-2" onclick="importMaterialsCSV()">
+          <i class="bi bi-file-earmark-csv me-1"></i>Import Materials CSV
+        </button>
+
+        <!-- Asphalt/Concrete/Custom Calculators (modular) -->
+        <div class="my-3">
+          <div id="calculatorContainer"></div>
+        </div>
+
+        <!-- Labor section -->
+        <h4 class="section-title">Labor</h4>
+        <div class="table-responsive">
+          <table class="table table-bordered" id="laborTable">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 35%">Description</th>
+                <th style="width: 15%">Hours</th>
+                <th style="width: 20%">Hourly Rate ($)</th>
+                <th style="width: 20%">Total ($)</th>
+                <th style="width: 10%">Action</th>
+              </tr>
+            </thead>
+            <tbody id="laborBody"></tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-secondary mb-3" onclick="addLabor()">
+          <i class="bi bi-plus-circle me-1"></i>Add Labor
+        </button>
+        <button type="button" class="btn btn-outline-secondary mb-3 ms-2" onclick="importLaborCSV()">
+          <i class="bi bi-file-earmark-csv me-1"></i>Import Labor CSV
+        </button>
+        <div class="rate-book-bar d-flex align-items-end gap-2 mb-3 flex-wrap">
+          <div>
+            <label class="form-label mb-1">Quick-add worker (Rate Book)</label>
+            <select id="rateBookSelect" class="form-select" style="min-width: 240px;"></select>
+          </div>
+          <button type="button" class="btn btn-outline-primary" onclick="addWorkerFromRateBook()">
+            <i class="bi bi-person-plus me-1"></i>Add Worker
+          </button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#rateBookModal">
+            <i class="bi bi-sliders me-1"></i>Edit Rates
+          </button>
+        </div>
+
+        <!-- Overhead section -->
+        <h4 class="section-title">Overhead</h4>
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label for="overheadCost" class="form-label">Overhead Cost ($)</label>
+            <input
+              type="number"
+              id="overheadCost"
+              class="form-control"
+              value="0"
+              step="0.01"
+              min="0"
+            />
+          </div>
+          <div class="col-md-4">
+            <label for="overheadPercent" class="form-label">Overhead (<span id="overheadPercentValue">0</span>%)</label>
+            <div class="d-flex align-items-center gap-2">
+              <input
+                type="range"
+                id="overheadPercent"
+                class="form-range flex-grow-1"
+                value="0"
+                step="1"
+                min="0"
+                max="30"
+              />
+              <input
+                type="number"
+                id="overheadPercentNumber"
+                class="form-control"
+                style="width: 80px;"
+                value="0"
+                step="1"
+                min="0"
+                max="30"
+              />
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label for="overheadBase" class="form-label">Overhead applies to</label>
+            <select id="overheadBase" class="form-select">
+              <option value="matlabor">Materials + Labor</option>
+              <option value="matlaborother">Materials + Labor + Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Pricing controls -->
+        <h4 class="section-title">Pricing Controls</h4>
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label for="salesTaxPercent" class="form-label">Sales Tax (<span id="salesTaxPercentValue">0</span>%)</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="range" id="salesTaxPercent" class="form-range flex-grow-1" value="0" step="0.1" min="0" max="15" />
+              <input type="number" id="salesTaxPercentNumber" class="form-control" style="width: 70px;" value="0" step="0.1" min="0" max="15" />
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label for="taxBase" class="form-label">Tax applies to</label>
+            <select id="taxBase" class="form-select">
+              <option value="materials">Materials only</option>
+              <option value="matlabor">Materials + Labor</option>
+              <option value="price">Full price (contract)</option>
+              <option value="none">Not taxable</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="contingencyPercent" class="form-label">Contingency (<span id="contingencyPercentValue">0</span>%)</label>
+            <div class="d-flex align-items-center gap-2">
+              <input type="range" id="contingencyPercent" class="form-range flex-grow-1" value="0" step="1" min="0" max="20" />
+              <input type="number" id="contingencyPercentNumber" class="form-control" style="width: 70px;" value="0" step="1" min="0" max="20" />
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label d-block">Profit Mode</label>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="profitMode" id="profitModeMargin" value="margin" checked />
+              <label class="form-check-label" for="profitModeMargin">Margin</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="profitMode" id="profitModeMarkup" value="markup" />
+              <label class="form-check-label" for="profitModeMarkup">Markup</label>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label for="roundingStep" class="form-label">Price Rounding</label>
+            <select id="roundingStep" class="form-select">
+              <option value="0">No rounding</option>
+              <option value="1">Nearest $1</option>
+              <option value="10">Nearest $10</option>
+              <option value="50">Nearest $50</option>
+              <option value="100">Nearest $100</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Equipment & Machine Rental -->
+        <h4 class="section-title">Equipment &amp; Machine Rental</h4>
+        <div class="equipment-bar">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label mb-1">Machine</label>
+              <select id="equipmentSelect" class="form-select"></select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label mb-1">Rate Basis</label>
+              <select id="equipmentBasis" class="form-select">
+                <option value="day">Per Day</option>
+                <option value="week">Per Week</option>
+                <option value="hour">Per Hour</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label mb-1">Duration</label>
+              <input type="number" id="equipmentDuration" class="form-control" min="0" step="0.5" value="1" />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label mb-1">Qty (units)</label>
+              <input type="number" id="equipmentQty" class="form-control" min="1" step="1" value="1" />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label mb-1">Delivery/Pickup ($)</label>
+              <input type="number" id="equipmentDelivery" class="form-control" min="0" step="1" value="0" />
+            </div>
+          </div>
+          <div class="equipment-footer d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+            <div class="equipment-estimate">
+              <span class="eq-rate-note" id="equipmentRateNote">Rate: —</span>
+              <span class="eq-total">Estimated: <strong>$<span id="equipmentEstimate">0.00</span></strong></span>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-primary" onclick="addEquipmentToJob()">
+                <i class="bi bi-truck me-1"></i>Add Equipment
+              </button>
+              <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#equipmentBookModal">
+                <i class="bi bi-sliders me-1"></i>Edit Rates
+              </button>
+            </div>
+          </div>
+        </div>
+        <p class="text-muted small mt-2 mb-0">Added equipment appears in <strong>Other Items</strong> below and rolls into your totals.</p>
+
+        <!-- Other custom items -->
+        <h4 class="section-title">Other Items / Custom Categories</h4>
+        <div class="table-responsive">
+          <table class="table table-bordered" id="otherTable">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 40%">Category</th>
+                <th style="width: 40%">Cost ($)</th>
+                <th style="width: 20%">Action</th>
+              </tr>
+            </thead>
+            <tbody id="otherBody"></tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-secondary mb-3" onclick="addOther()">
+          <i class="bi bi-plus-circle me-1"></i>Add Other Item
+        </button>
+
+        <!-- Totals summary -->
+        <h4 class="section-title">Summary</h4>
+        <div class="summary-panel">
+          <div class="kpi-strip">
+            <div class="kpi-tile kpi-green">
+              <div class="kpi-label">Profit %</div>
+              <div class="kpi-value" id="kpiProfitPct">0.0%</div>
+            </div>
+            <div class="kpi-tile kpi-blue">
+              <div class="kpi-label">Margin on Cost</div>
+              <div class="kpi-value" id="kpiMarginOnCost">0.0%</div>
+            </div>
+            <div class="kpi-tile kpi-slate">
+              <div class="kpi-label">Breakeven</div>
+              <div class="kpi-value">$<span id="kpiBreakeven">0.00</span></div>
+            </div>
+          </div>
+
+          <div class="summary-headline">
+            <div class="result-tile">
+              <span class="result-label">Total Cost</span>
+              <span class="result-figure"><span class="result-prefix">$</span><input type="text" id="totalCost" readonly /></span>
+              <span class="result-sub">your cost, pre-tax</span>
+            </div>
+            <div class="result-tile tile-price">
+              <span class="result-label">Price</span>
+              <span class="result-figure"><span class="result-prefix">$</span><input type="text" id="price" readonly /></span>
+              <span class="result-sub">pre-tax sell price</span>
+            </div>
+            <div class="result-tile tile-profit">
+              <span class="result-label">Net Profit</span>
+              <span class="result-figure"><span class="result-prefix">$</span><input type="text" id="netProfit" readonly /></span>
+              <span class="result-sub">price − cost</span>
+            </div>
+            <div class="result-tile tile-total">
+              <span class="result-label">Customer Total</span>
+              <span class="result-figure"><span class="result-prefix">$</span><input type="text" id="grandTotal" readonly /></span>
+              <span class="result-sub">incl. sales tax</span>
+            </div>
+          </div>
+
+          <div class="summary-breakdown">
+            <div class="bd-item"><label>Materials</label><input type="text" id="totalMaterials" readonly /></div>
+            <div class="bd-item"><label>Labor</label><input type="text" id="totalLabor" readonly /></div>
+            <div class="bd-item"><label>Overhead</label><input type="text" id="totalOverhead" readonly /></div>
+            <div class="bd-item"><label>Other</label><input type="text" id="totalOther" readonly /></div>
+            <div class="bd-item"><label>Contingency</label><input type="text" id="totalContingency" readonly /></div>
+            <div class="bd-item"><label>Sales Tax</label><input type="text" id="totalSalesTax" readonly /></div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="mt-4 d-flex flex-wrap gap-2">
+          <button type="button" class="btn btn-primary" onclick="saveJob()">
+            <i class="bi bi-check-lg me-1"></i>Save Job
+          </button>
+          <button type="button" class="btn btn-outline-primary" onclick="saveJobToServer()">
+            <i class="bi bi-cloud-upload me-1"></i>Save to Server
+          </button>
+          <button type="button" class="btn btn-outline-info" onclick="syncJobToHighLevel()">
+            <i class="bi bi-send me-1"></i>Send to HighLevel
+          </button>
+          <button type="button" class="btn btn-outline-success" onclick="exportExcel()">
+            <i class="bi bi-file-earmark-excel me-1"></i>Export to Excel
+          </button>
+          <button type="button" class="btn btn-outline-danger" onclick="exportPDF()">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Export to PDF
+          </button>
+          <button type="button" class="btn btn-success" onclick="exportClientEstimatePDF()">
+            <i class="bi bi-file-earmark-text me-1"></i>Export Client Estimate
+          </button>
+          <button type="button" class="btn btn-outline-secondary" onclick="exportJobJSON()">
+            <i class="bi bi-file-earmark-code me-1"></i>Export JSON
+          </button>
+          <button type="button" class="btn btn-outline-secondary" onclick="importJobJSON()">
+            <i class="bi bi-upload me-1"></i>Import JSON
+          </button>
+          <button type="button" class="btn btn-outline-info" onclick="duplicateCurrentJob()">
+            <i class="bi bi-copy me-1"></i>Duplicate as New
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-warning"
+            onclick="deleteJob()"
+            id="deleteBtn"
+            style="display: none;"
+          >
+            <i class="bi bi-trash me-1"></i>Delete Job
+          </button>
+        </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <!-- External libraries -->
+    <!-- SheetJS for Excel export -->
+    <script src="static/vendor/js/xlsx.full.min.js" async></script>
+    <!-- FileSaver for saving files -->
+    <script src="static/vendor/js/FileSaver.min.js" async></script>
+    <!-- html2pdf for PDF export (includes html2canvas and jsPDF) -->
+    <script src="static/vendor/js/html2pdf.bundle.min.js"></script>
+    <!-- Chart.js for preview charts -->
+    <script src="static/vendor/js/chart.umd.min.js" async></script>
+    <!-- API client -->
+    <script src="static/js/api.js"></script>
+    <!-- Auth script (load early) -->
+    <script src="static/js/auth.js"></script>
+    <!-- Calculators -->
+    <script src="static/js/calculators.js"></script>
+    <!-- Job Templates -->
+    <script src="static/js/templates.js"></script>
+    <!-- Main form script -->
+    <script src="static/js/job_form.js"></script>
+    <!-- Bootstrap JS Bundle with Popper (loaded after core form logic) -->
+    <script
+      src="static/vendor/bootstrap/bootstrap.bundle.min.js"
+      async
+    ></script>
+
+    <!-- Equipment Rental Rates Modal -->
+    <div class="modal fade" id="equipmentBookModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Equipment Rental Rates</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted">Your machine list and rental rates — powers the Equipment quick-add. Saved on this device.</p>
+            <div class="eq-head d-flex gap-2 mb-2 px-1 text-muted small fw-semibold">
+              <div class="flex-grow-1">Machine</div>
+              <div style="width: 80px;">Day $</div>
+              <div style="width: 80px;">Week $</div>
+              <div style="width: 80px;">Hour $</div>
+              <div style="width: 40px;"></div>
+            </div>
+            <div id="equipmentRows"></div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addEquipmentRow()">
+              <i class="bi bi-plus-lg me-1"></i>Add Machine
+            </button>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-link text-danger me-auto" onclick="resetEquipmentBook()">Reset to defaults</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="saveEquipmentFromEditor()" data-bs-dismiss="modal">Save Rates</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Worker Rate Book Modal -->
+    <div class="modal fade" id="rateBookModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Worker Rate Book</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted">Set your standard hourly rates. These power the “Quick-add worker” menu and are saved on this device.</p>
+            <div id="rateBookRows"></div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addRateBookRow()">
+              <i class="bi bi-plus-lg me-1"></i>Add Role
+            </button>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-link text-danger me-auto" onclick="resetRateBook()">Reset to defaults</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="saveRateBookFromEditor()" data-bs-dismiss="modal">Save Rates</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Profit & Loss Preview</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="previewModalBody"></div>
+          <div class="modal-footer">
+            <a href="index.html" class="btn btn-primary">Back to Jobs</a>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue Editing</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

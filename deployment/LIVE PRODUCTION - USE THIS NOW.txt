@@ -1,0 +1,98 @@
+LIVE PRODUCTION - USE THIS NOW
+==============================
+
+Use this for the existing ugxpnls.com site, because the database is already
+working and admin users already exist.
+
+UPLOAD THIS ZIP:
+
+   1 - WEBSITE FILES / ugxpnl-production-live.zip
+
+This production zip intentionally does NOT include:
+
+   api/seed_admin.php
+   api/setup_check.php
+   api/setup_config_example.php
+   api/db_config.php
+   api/schema.sql
+   docs, examples, or setup README files
+
+BEFORE UPLOAD
+-------------
+1. In Hostinger File Manager, open public_html.
+2. Confirm this server-only file exists:
+
+      public_html/api/db_config.php
+
+   Do not overwrite or delete it unless the same database values were moved to
+   Hostinger environment variables.
+
+3. Make a backup folder or full public_html backup.
+
+
+UPLOAD
+------
+1. Upload:
+
+      1 - WEBSITE FILES / ugxpnl-production-live.zip
+
+2. Extract it directly inside public_html.
+3. Overwrite existing files when Hostinger asks.
+4. Delete ugxpnl-production-live.zip from public_html after extraction.
+
+
+DELETE OLD SETUP FILES FROM THE SERVER
+--------------------------------------
+After extraction, manually delete these if they still exist in public_html/api:
+
+   seed_admin.php
+   setup_check.php
+   setup_config.php
+   setup_config_example.php
+
+Do not delete:
+
+   db_config.php
+
+
+FINAL LIVE CHECKS
+-----------------
+Open:
+
+   https://ugxpnls.com/login.html
+
+Log in with an existing admin.
+
+Open:
+
+   https://ugxpnls.com/api/health.php
+
+Expected:
+
+   {"status":"ok","database":"ok",...}
+
+Check these URLs after uploading. They should no longer be Hostinger 404 pages:
+
+   https://ugxpnls.com/api/ghl.php?action=status
+   https://ugxpnls.com/api/automation.php?action=status
+   https://ugxpnls.com/api/mcp.php
+
+GHL/MCP endpoints may return 401 or 503 until the private server tokens are set,
+but they should not return 404 after the production zip is uploaded.
+
+
+SERVER TOKENS NEEDED FOR GHL/MCP
+--------------------------------
+Set these in Hostinger environment variables or api/ghl_config.php:
+
+   GHL_ACCESS_TOKEN
+   GHL_LOCATION_ID
+   UGX_MCP_BEARER_TOKEN
+
+Optional, only if syncing opportunities:
+
+   GHL_PIPELINE_ID
+   GHL_PIPELINE_STAGE_ID
+   GHL_USER_ID
+
+Keep all tokens server-side only. Do not paste them into browser JavaScript.

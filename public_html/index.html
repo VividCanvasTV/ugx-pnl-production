@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UGX PNL'S</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <!-- Bootstrap CSS -->
+    <link
+      href="static/vendor/bootstrap/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="static/vendor/bootstrap-icons/bootstrap-icons.css">
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="static/css/styles.css" />
+  </head>
+  <body>
+    <!-- Modern Header -->
+    <header class="modern-header">
+      <div class="header-container">
+        <div class="logo-section">
+          <div class="logo-icon">U</div>
+          <a href="#" class="logo-text">
+            UGX PNL'S
+            <span>Calculator</span>
+          </a>
+        </div>
+        <nav class="nav-section">
+          <span class="nav-btn ghost" id="navUser" style="display:none;"></span>
+          <a href="admin.html" class="nav-btn" id="navAdminLink" style="display:none;">
+            <i class="bi bi-people"></i>
+            <span>Users</span>
+          </a>
+          <button class="nav-btn" onclick="syncNow()">
+            <i class="bi bi-arrow-clockwise"></i>
+            <span>Sync</span>
+          </button>
+          <a href="job_form.html" class="nav-btn primary" onclick="createNew()">
+            <i class="bi bi-plus"></i>
+            <span>New Job</span>
+          </a>
+          <button class="nav-btn" id="navLogout" onclick="if(window.Auth)Auth.authLogout()">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="main-container">
+      <div class="page-header ops-page-header">
+        <div>
+          <h1 class="page-title">Projects</h1>
+          <p class="page-subtitle">Live job costing, customer estimates, scheduling, and profit tracking.</p>
+        </div>
+      </div>
+
+      <section class="operations-dashboard" aria-label="Client and profit dashboard">
+        <div class="dashboard-toolbar">
+          <div>
+              <h2 class="section-title">Total Jobs Calculations</h2>
+            <p class="dashboard-subtitle">Client rollups, job mix, and real P&L totals from saved jobs.</p>
+          </div>
+          <div class="dashboard-controls">
+            <label for="clientSort" class="form-label">Sort clients</label>
+            <select id="clientSort" class="form-select" onchange="handleClientSort(this.value)">
+              <option value="jobs_desc">Total jobs done</option>
+              <option value="profit_desc">Net profit</option>
+              <option value="revenue_desc">Total quoted</option>
+              <option value="margin_desc">Profit margin</option>
+              <option value="recent_desc">Most recent</option>
+              <option value="name_asc">Client name</option>
+            </select>
+          </div>
+	        </div>
+	        <div id="permissionTools" class="permission-tools"></div>
+	        <div id="operationsSummary"></div>
+	        <div class="dashboard-grid">
+          <div class="modern-card dashboard-card">
+            <div class="card-header compact">
+              <h3 class="section-title">Client Profiles</h3>
+            </div>
+            <div class="card-body">
+              <div id="clientProfiles"></div>
+            </div>
+          </div>
+          <div class="modern-card dashboard-card">
+            <div class="card-header compact">
+              <h3 class="section-title">Job Type Mix</h3>
+            </div>
+            <div class="card-body">
+              <div id="jobTypeSummary"></div>
+            </div>
+          </div>
+	        </div>
+	      </section>
+
+	      <section class="modern-card schedule-dashboard" aria-label="Active job board and calendar">
+	        <div class="card-header schedule-header">
+	          <div>
+	            <h2 class="section-title">Active Job Board & Calendar</h2>
+	            <p class="dashboard-subtitle">Track job ranges, active work, upcoming starts, and scheduling gaps.</p>
+	          </div>
+	          <div class="calendar-actions">
+	            <button type="button" class="modern-btn ghost" onclick="shiftCalendarRange(-1)" title="Previous range">
+	              <i class="bi bi-chevron-left"></i>
+	            </button>
+	            <button type="button" class="modern-btn ghost" onclick="jumpCalendarToday()">
+	              <i class="bi bi-calendar-check"></i>
+	              Today
+	            </button>
+	            <button type="button" class="modern-btn ghost" onclick="shiftCalendarRange(1)" title="Next range">
+	              <i class="bi bi-chevron-right"></i>
+	            </button>
+	            <button type="button" class="modern-btn primary" onclick="openCalendarOverlay()">
+	              <i class="bi bi-arrows-fullscreen"></i>
+	              Overlay
+	            </button>
+	          </div>
+	        </div>
+	        <div class="card-body">
+	          <div class="calendar-toolbar">
+	            <div class="calendar-mode-tabs" role="group" aria-label="Calendar view">
+	              <button type="button" id="calendarModeMonth" class="calendar-mode active" onclick="handleCalendarView('month')">
+	                <i class="bi bi-calendar3"></i>
+	                Month
+	              </button>
+	              <button type="button" id="calendarModeYear" class="calendar-mode" onclick="handleCalendarView('year')">
+	                <i class="bi bi-calendar4"></i>
+	                Year
+	              </button>
+	              <button type="button" id="calendarModeCustom" class="calendar-mode" onclick="handleCalendarView('custom')">
+	                <i class="bi bi-calendar-range"></i>
+	                Custom
+	              </button>
+	            </div>
+	            <div class="calendar-range-inputs" id="calendarRangeInputs">
+	              <label>
+	                Start
+	                <input type="date" id="calendarCustomStart" class="form-control" onchange="handleCustomCalendarRange()" />
+	              </label>
+	              <label>
+	                End
+	                <input type="date" id="calendarCustomEnd" class="form-control" onchange="handleCustomCalendarRange()" />
+	              </label>
+	            </div>
+	          </div>
+	          <div id="scheduleSummary" class="schedule-summary"></div>
+	          <div class="schedule-layout">
+	            <div id="jobBoard" class="job-board"></div>
+	            <div id="jobCalendar" class="job-calendar"></div>
+	          </div>
+	        </div>
+	      </section>
+	      
+	      <div class="modern-card jobs-panel">
+        <div class="card-header jobs-header">
+          <div class="jobs-header-inner">
+            <div class="jobs-title-row">
+              <h2 class="section-title">Active Jobs</h2>
+              <span class="status-badge secondary" id="syncStatus">
+                <i class="bi bi-wifi-off"></i>
+                Offline
+              </span>
+            </div>
+            <div class="jobs-actions">
+              <div class="search-container">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search jobs..." onkeyup="handleSearch(this.value)">
+              </div>
+              <button class="modern-btn primary" onclick="createNew()">
+                <i class="bi bi-plus-lg"></i>
+                New Job
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div id="jobsList"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- API client -->
+    <script src="static/js/api.js"></script>
+    <!-- Main app script -->
+    <!-- Auth script (load before app.js) -->
+    <script src="static/js/auth.js"></script>
+    <!-- Custom script -->
+    <script src="static/js/app.js"></script>
+    <!-- Bootstrap JS Bundle with Popper (non-critical for dashboard startup) -->
+	    <script
+	      src="static/vendor/bootstrap/bootstrap.bundle.min.js"
+	      async
+	    ></script>
+
+	    <div class="calendar-overlay" id="calendarOverlay" aria-hidden="true">
+	      <div class="calendar-overlay-panel" role="dialog" aria-modal="true" aria-labelledby="calendarOverlayTitle">
+	        <div class="calendar-overlay-head">
+	          <div>
+	            <h2 id="calendarOverlayTitle">Operations Calendar</h2>
+	            <p id="calendarOverlaySubtitle">Month, year, and custom range job tracking.</p>
+	          </div>
+	          <div class="calendar-actions">
+	            <button type="button" class="modern-btn ghost" onclick="shiftCalendarRange(-1)" title="Previous range">
+	              <i class="bi bi-chevron-left"></i>
+	            </button>
+	            <button type="button" class="modern-btn ghost" onclick="jumpCalendarToday()">
+	              <i class="bi bi-calendar-check"></i>
+	              Today
+	            </button>
+	            <button type="button" class="modern-btn ghost" onclick="shiftCalendarRange(1)" title="Next range">
+	              <i class="bi bi-chevron-right"></i>
+	            </button>
+	            <button type="button" class="modern-btn ghost icon-only" onclick="closeCalendarOverlay()" title="Close overlay">
+	              <i class="bi bi-x-lg"></i>
+	            </button>
+	          </div>
+	        </div>
+	        <div class="calendar-toolbar overlay-toolbar">
+	          <div class="calendar-mode-tabs" role="group" aria-label="Overlay calendar view">
+	            <button type="button" id="overlayModeMonth" class="calendar-mode active" onclick="handleCalendarView('month')">
+	              <i class="bi bi-calendar3"></i>
+	              Month
+	            </button>
+	            <button type="button" id="overlayModeYear" class="calendar-mode" onclick="handleCalendarView('year')">
+	              <i class="bi bi-calendar4"></i>
+	              Year
+	            </button>
+	            <button type="button" id="overlayModeCustom" class="calendar-mode" onclick="handleCalendarView('custom')">
+	              <i class="bi bi-calendar-range"></i>
+	              Custom
+	            </button>
+	          </div>
+	          <div class="calendar-range-inputs" id="overlayRangeInputs">
+	            <label>
+	              Start
+	              <input type="date" id="overlayCustomStart" class="form-control" onchange="handleCustomCalendarRange(true)" />
+	            </label>
+	            <label>
+	              End
+	              <input type="date" id="overlayCustomEnd" class="form-control" onchange="handleCustomCalendarRange(true)" />
+	            </label>
+	          </div>
+	        </div>
+	        <div id="overlayScheduleSummary" class="schedule-summary"></div>
+	        <div class="schedule-layout overlay-layout">
+	          <div id="overlayJobBoard" class="job-board"></div>
+	          <div id="overlayJobCalendar" class="job-calendar"></div>
+	        </div>
+	      </div>
+	    </div>
+	  </body>
+	</html>

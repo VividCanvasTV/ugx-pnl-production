@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UGX PNL'S - User Management</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link
+      href="static/vendor/bootstrap/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="static/vendor/bootstrap-icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="static/css/styles.css" />
+  </head>
+  <body>
+    <header class="modern-header">
+      <div class="header-container">
+        <div class="logo-section">
+          <div class="logo-icon">U</div>
+          <a href="index.html" class="logo-text">UGX PNL'S <span>Users</span></a>
+        </div>
+        <nav class="nav-section">
+          <a href="index.html" class="nav-btn"><i class="bi bi-arrow-left"></i> <span>Back to Jobs</span></a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main-container">
+      <div class="page-header">
+        <h1 class="page-title">User Management</h1>
+        <p class="page-subtitle">Add team members and control who can sign in to UGX PNL'S.</p>
+      </div>
+
+      <div id="alertBox"></div>
+
+      <!-- Create user -->
+      <div class="modern-card mb-4">
+        <div class="card-header"><h2 class="section-title">Add a User</h2></div>
+        <div class="card-body">
+          <form id="createUserForm" class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Name</label>
+              <input type="text" id="newName" class="form-control" placeholder="Jane Smith" autocomplete="off" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Email<span class="text-danger">*</span></label>
+              <input type="email" id="newEmail" class="form-control" required placeholder="jane@company.com" autocomplete="off" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Password<span class="text-danger">*</span></label>
+              <input type="password" id="newPassword" class="form-control" required minlength="8" placeholder="min 8 characters" autocomplete="new-password" />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Role</label>
+              <select id="newRole" class="form-select">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="col-md-1">
+              <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i></button>
+            </div>
+          </form>
+          <small class="text-muted d-block mt-2">Users see only the jobs they create. Admins see and manage everything.</small>
+        </div>
+      </div>
+
+      <!-- Users table -->
+      <div class="modern-card">
+        <div class="card-header"><h2 class="section-title">Team</h2></div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form id="resetPasswordForm">
+            <div class="modal-header">
+              <h2 class="modal-title fs-5" id="resetPasswordTitle">Reset Password</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" id="resetUserId" />
+              <label for="resetPasswordInput" class="form-label">New Password</label>
+              <input type="password" id="resetPasswordInput" class="form-control" required minlength="8" autocomplete="new-password" />
+              <small class="text-muted d-block mt-2">Use at least 8 characters.</small>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Password</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="static/js/api.js"></script>
+    <script src="static/js/auth.js"></script>
+    <script>
+      let ME = null;
+
+      // Tiny DOM builder — all text goes through textContent, so user data can
+      // never be interpreted as HTML (no innerHTML anywhere in this page).
+      function el(tag, attrs, children) {
+        const node = document.createElement(tag);
+        attrs = attrs || {};
+        for (const k in attrs) {
+          const v = attrs[k];
+          if (v == null) continue;
+          if (k === 'class') node.className = v;
+          else if (k === 'text') node.textContent = v;
+          else if (k === 'disabled') { if (v) node.setAttribute('disabled', ''); }
+          else if (k.slice(0, 2) === 'on' && typeof v === 'function') node.addEventListener(k.slice(2), v);
+          else node.setAttribute(k, v);
+        }
+        (children || []).forEach(c => { if (c != null) node.append(c.nodeType ? c : document.createTextNode(String(c))); });
+        return node;
+      }
+
+      function showAlert(type, msg) {
+        const box = document.getElementById('alertBox');
+        box.replaceChildren(el('div', { class: `alert alert-${type} alert-dismissible fade show`, role: 'alert' }, [
+          msg,
+          el('button', { type: 'button', class: 'btn-close', 'data-bs-dismiss': 'alert', 'aria-label': 'Close' })
+        ]));
+      }
+
+      function fmtDate(s) {
+        if (!s) return '—';
+        const d = new Date(String(s).replace(' ', 'T'));
+        return isNaN(d) ? String(s) : d.toLocaleDateString();
+      }
+
+      function friendly(e) {
+        const m = String((e && e.message) || e);
+        const i = m.indexOf('{');
+        if (i >= 0) { try { return JSON.parse(m.slice(i)).error || m; } catch (_) {} }
+        return m;
+      }
+
+      function badge(cls, text) { return el('span', { class: `badge ${cls}` }, [text]); }
+
+      function userRow(u) {
+        const isMe = ME && u.id === ME.id;
+        const active = Number(u.active) === 1;
+
+        const nameCell = el('td', {}, [u.name]);
+        if (isMe) nameCell.append(' ', el('small', { class: 'text-muted' }, ['(you)']));
+
+        const roleBtn = el('button', {
+          class: 'btn btn-sm btn-outline-secondary',
+          onclick: () => toggleRole(u.id, u.role)
+        }, [u.role === 'admin' ? 'Make User' : 'Make Admin']);
+
+        const pwBtn = el('button', {
+          class: 'btn btn-sm btn-outline-warning ms-1',
+          onclick: () => resetPw(u.id)
+        }, ['Reset PW']);
+
+        const statusBtn = el('button', {
+          class: `btn btn-sm ms-1 ${active ? 'btn-outline-danger' : 'btn-outline-success'}`,
+          disabled: isMe,
+          title: isMe ? 'You cannot change your own status' : null,
+          onclick: () => toggleActive(u.id, active ? 1 : 0)
+        }, [active ? 'Deactivate' : 'Reactivate']);
+
+        return el('tr', {}, [
+          nameCell,
+          el('td', {}, [u.email]),
+          el('td', {}, [badge(u.role === 'admin' ? 'bg-primary' : 'bg-secondary', u.role === 'admin' ? 'Admin' : 'User')]),
+          el('td', {}, [badge(active ? 'bg-success' : 'bg-danger', active ? 'Active' : 'Inactive')]),
+          el('td', {}, [fmtDate(u.created_at)]),
+          el('td', { class: 'text-end' }, [roleBtn, pwBtn, statusBtn])
+        ]);
+      }
+
+      async function loadUsers() {
+        const body = document.getElementById('usersBody');
+        body.replaceChildren(el('tr', {}, [el('td', { colspan: '6', class: 'text-center text-muted py-4' }, ['Loading…'])]));
+        try {
+          const res = await apiListUsers();
+          const users = (res && res.users) || [];
+          if (!users.length) {
+            body.replaceChildren(el('tr', {}, [el('td', { colspan: '6', class: 'text-center text-muted py-4' }, ['No users yet.'])]));
+            return;
+          }
+          body.replaceChildren(...users.map(userRow));
+        } catch (e) {
+          body.replaceChildren(el('tr', {}, [el('td', { colspan: '6', class: 'text-center text-danger py-4' }, ['Failed to load users.'])]));
+        }
+      }
+
+      async function toggleRole(id, currentRole) {
+        const role = currentRole === 'admin' ? 'user' : 'admin';
+        try { await apiUpdateUser(id, { role }); showAlert('success', 'Role updated.'); loadUsers(); }
+        catch (e) { showAlert('danger', friendly(e)); }
+      }
+
+      async function toggleActive(id, isActive) {
+        try {
+          if (isActive) await apiDeactivateUser(id);
+          else await apiUpdateUser(id, { active: 1 });
+          showAlert('success', 'Status updated.'); loadUsers();
+        } catch (e) { showAlert('danger', friendly(e)); }
+      }
+
+      async function resetPw(id) {
+        const idInput = document.getElementById('resetUserId');
+        const pwInput = document.getElementById('resetPasswordInput');
+        const modalEl = document.getElementById('resetPasswordModal');
+        idInput.value = id;
+        pwInput.value = '';
+        if (!window.bootstrap || !modalEl) {
+          showAlert('danger', 'Password reset tools are still loading. Try again in a moment.');
+          return;
+        }
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        setTimeout(() => pwInput.focus(), 150);
+      }
+
+      document.getElementById('resetPasswordForm').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const id = document.getElementById('resetUserId').value;
+        const pwInput = document.getElementById('resetPasswordInput');
+        const pw = pwInput.value;
+        if (pw.length < 8) {
+          pwInput.focus();
+          showAlert('danger', 'Password must be at least 8 characters.');
+          return;
+        }
+        try {
+          await apiResetUserPassword(id, pw);
+          bootstrap.Modal.getOrCreateInstance(document.getElementById('resetPasswordModal')).hide();
+          ev.target.reset();
+          showAlert('success', 'Password reset.');
+        } catch (e) {
+          showAlert('danger', friendly(e));
+        }
+      });
+
+      document.getElementById('createUserForm').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const payload = {
+          name: document.getElementById('newName').value.trim(),
+          email: document.getElementById('newEmail').value.trim(),
+          password: document.getElementById('newPassword').value,
+          role: document.getElementById('newRole').value,
+        };
+        try {
+          await apiCreateUser(payload);
+          showAlert('success', 'User created.');
+          ev.target.reset();
+          loadUsers();
+        } catch (e) { showAlert('danger', friendly(e)); }
+      });
+
+      (async function init() {
+        ME = await Auth.requireAuth({ admin: true });
+        if (!ME) return;            // requireAuth already redirected
+        loadUsers();
+      })();
+    </script>
+    <script src="static/vendor/bootstrap/bootstrap.bundle.min.js" async></script>
+  </body>
+</html>

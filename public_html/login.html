@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UGX PNL'S - Login</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <!-- Bootstrap CSS -->
+    <link
+      href="static/vendor/bootstrap/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="static/vendor/bootstrap-icons/bootstrap-icons.css">
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="static/css/styles.css" />
+    <style>
+      body {
+        background: linear-gradient(135deg, #0066ff 0%, #004cbf 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .login-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .login-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #0066ff, #0052cc);
+      }
+      
+      .login-logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      
+      .login-logo .logo-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
+        color: white;
+        font-size: 36px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+      }
+      
+      .login-logo h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0;
+      }
+      
+      .login-logo p {
+        color: #666;
+        margin: 5px 0 0 0;
+      }
+      
+      .form-floating {
+        margin-bottom: 20px;
+      }
+      
+      .form-floating input {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        font-size: 16px;
+        padding: 1rem 0.75rem;
+        height: calc(3.5rem + 2px);
+      }
+      
+      .form-floating input:focus {
+        border-color: #0066ff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 102, 255, 0.1);
+      }
+      
+      .btn-login {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
+        border: none;
+        color: white;
+        transition: all 0.3s ease;
+      }
+      
+      .btn-login:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(0, 102, 255, 0.3);
+      }
+      
+      .btn-login:active {
+        transform: translateY(0);
+      }
+      
+      .alert {
+        border-radius: 8px;
+        font-size: 14px;
+      }
+      
+      .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #666;
+        z-index: 10;
+      }
+      
+      .password-toggle:hover {
+        color: #0066ff;
+      }
+      
+      .remember-me {
+        margin-bottom: 20px;
+      }
+      
+      .remember-me .form-check-input:checked {
+        background-color: #0066ff;
+        border-color: #0066ff;
+      }
+      
+      .loading-spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #0066ff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .security-notice {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+      }
+      
+      .security-notice i {
+        color: #0066ff;
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-logo">
+        <div class="logo-icon">U</div>
+        <h1>UGX PNL'S</h1>
+        <p>Secure Login</p>
+      </div>
+      
+      <form id="loginForm">
+        <div id="errorAlert" class="alert alert-danger d-none" role="alert">
+          <i class="bi bi-exclamation-circle me-1"></i>
+          <span id="errorMessage">Invalid email or password</span>
+        </div>
+        
+        <div class="form-floating">
+          <input
+            type="email"
+            class="form-control"
+            id="email"
+            placeholder="name@example.com"
+            required
+            autocomplete="email"
+          />
+          <label for="email">Email address</label>
+        </div>
+        
+        <div class="form-floating position-relative">
+          <input
+            type="password"
+            class="form-control"
+            id="password"
+            placeholder="Password"
+            required
+            autocomplete="current-password"
+          />
+          <label for="password">Password</label>
+          <span class="password-toggle" onclick="togglePassword()">
+            <i class="bi bi-eye" id="passwordToggleIcon"></i>
+          </span>
+        </div>
+        
+        <div class="form-check remember-me">
+          <input class="form-check-input" type="checkbox" value="" id="rememberMe">
+          <label class="form-check-label" for="rememberMe">
+            Remember me for 30 days
+          </label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-login">
+          <span id="loginText">Sign In</span>
+          <div class="loading-spinner" id="loadingSpinner"></div>
+        </button>
+      </form>
+      
+      <div class="security-notice">
+        <i class="bi bi-shield-check"></i>
+        This is a secure area. Unauthorized access is prohibited.
+      </div>
+    </div>
+    
+    <!-- Auth script -->
+    <script src="static/js/auth.js"></script>
+    <script>
+      function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.getElementById('passwordToggleIcon');
+
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          toggleIcon.classList.remove('bi-eye');
+          toggleIcon.classList.add('bi-eye-slash');
+        } else {
+          passwordInput.type = 'password';
+          toggleIcon.classList.remove('bi-eye-slash');
+          toggleIcon.classList.add('bi-eye');
+        }
+      }
+
+      function showLoginError(msg) {
+        const alert = document.getElementById('errorAlert');
+        const msgEl = document.getElementById('errorMessage');
+        if (msgEl) msgEl.textContent = msg;
+        if (alert) alert.classList.remove('d-none');
+      }
+
+      function setLoading(isLoading) {
+        const text = document.getElementById('loginText');
+        const spinner = document.getElementById('loadingSpinner');
+        if (text) text.style.display = isLoading ? 'none' : '';
+        if (spinner) spinner.style.display = isLoading ? 'inline-block' : 'none';
+      }
+
+      // If already signed in, skip the login screen.
+      (async function () {
+        if (window.Auth && await Auth.getCurrentUser()) {
+          window.location.replace('index.html');
+        }
+      })();
+
+      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        document.getElementById('errorAlert').classList.add('d-none');
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || !password) {
+          showLoginError('Please enter your email and password.');
+          return;
+        }
+        setLoading(true);
+        const result = await Auth.authLogin(email, password);
+        setLoading(false);
+        if (result && result.success) {
+          window.location.replace('index.html');
+        } else {
+          showLoginError((result && result.error) || 'Invalid email or password');
+        }
+      });
+    </script>
+  </body>
+</html>
